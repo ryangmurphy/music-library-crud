@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Add New Album</title>
+        <script src="/scripts/loadtheme.js"></script>
+        <style>
+            body {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                margin: 0;
+            }
+
+            .container {
+                width: 40%; /* Adjust the width of the container as needed */
+            }
+
+            h1 {
+                text-align: center;
+                margin-bottom: 30px;
+            }
+
+            #artist-name-container {
+                text-align: center;
+                font-size: 1.5em;
+                margin-bottom: 20px;
+            }
+
+            #album-form {
+                margin-bottom: 20px;
+            }
+
+            #album-title-label {
+                font-weight: bold;
+            }
+        </style>
+
+    </head>
+
+    <body>
+        <div class="container">
+            <h1>Add New Album</h1>
+
+            <div id="artist-name-container">
+                <!-- Display the artist's name from sessionStorage -->
+                <p><strong>Artist:</strong> <span id="artist-name"></span></p>
+            </div>
+
+            <!-- Form for adding a new album -->
+            <form id="album-form">
+                <div class="mb-3">
+                    <label id="album-title-label" for="album-title" class="form-label">Album Title: <small>(required)</small></label>
+                    <input type="text" id="album-title" name="albumTitle" class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label id="release-year-label" for="release-year" class="form-label">Release Year: <small>(optional)</small></label>
+                    <input type="number" id="release-year" name="releaseYear" class="form-control">
+                </div>
+
+                <button type="submit" id="submit-button" class="btn btn-primary">Add Album</button>
+            </form>
+
+            <!-- Bootstrap 5 Modal -->
+            <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalTitle"></h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p id="modalMessage"></p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                document.addEventListener("DOMContentLoaded", function () {
+                    const albumForm = document.getElementById("album-form");
+                    const artistNameContainer = document.getElementById("artist-name");
+
+                    // Display the artist's name from sessionStorage
+                    const selectedArtistId = sessionStorage.getItem("selectedArtistId");
+                    const selectedArtistName = sessionStorage.getItem("selectedArtistName");
+                    artistNameContainer.textContent = selectedArtistName;
+
+                    albumForm.addEventListener("submit", function (event) {
+                        event.preventDefault();
+                        const albumTitle = document.getElementById("album-title").value;
+                        const releaseYear = document.getElementById("release-year").value;
+
+                        // Send the album details to the backend API
+                        fetch("/api/albums", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+
+                            body: JSON.stringify({
+                                ...(albumTitle && { Title: albumTitle }),
+                                ArtistId: selectedArtistId, // Use the artist's id from sessionStorage
+                                ...(releaseYear && { ReleaseYear: releaseYear })
+                            }),
+                        })
+                        .then(async response => {
+                            // Handle the response based on status codes
+                            switch(response.status){
+                                case 201: {
+                                    // Handle success
+                                    response.json()
+                                        .then(async json => {
+                                            const newAlbumId = json.lastInsertRowid; // should come from API response
+                                            sessionStorage.setItem("selectedAlbumId", newAlbumId);
+                                            sessionStorage.setItem("selectedAlbumTitle", albumTitle);
+                                            await showModalMessage("Success", `Album '${albumTitle}' added successfully with Id '${newAlbumId}'`);
+                                            window.location.href = "/";
+                                        });
+                                    break;
+                                }
+                                case 422: {
+                                    // Handle validation errors from the server
+                                    response.json()
+                                        .then(async json => {
+                                            let message = '';
+                                            json.forEach(validationError => {
+                                                message += `<li>${validationError.message}</li>`;
+                                            });
+                                            message = `<ul>${message}</ul>`;
+                                            await showModalMessage("Validation Errors", message);
+                                        });
+                                    break;
+                                }
+                            }
+                        })
+                        .catch(async error => {
+                            // Handle error
+                            console.log(error);
+                            await showModalMessage("Error", "An error occurred when submitting the album. Please check the browser console for details.");
+                        });
+                    });
+                });
+
+                function showModalMessage(title, message) {
+                    const modal = new bootstrap.Modal(document.getElementById('myModal'));
+                    document.getElementById('modalTitle').innerHTML = title;
+                    document.getElementById('modalMessage').innerHTML = message;
+                    modal.show();
+
+                    // Wrap the modal closing in a promise
+                    return new Promise(resolve => {
+                        modal._element.addEventListener('hidden.bs.modal', function () {
+                            resolve();
+                        });
+                    });
+                }
+            </script>
+
+        </div>
+
+        <!-- Bootstrap JS and Popper.js (required for Bootstrap) -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    </body>
+
+</html>

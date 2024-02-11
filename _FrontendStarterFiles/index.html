@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Chinook Music Database</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <script src="/scripts/loadtheme.js"></script>
+        <style>
+            body {
+                margin: 0;
+            }
+     
+            .navbar {
+                padding-top: 5px;
+                padding-bottom: 5px;
+                height: 50px;
+            }
+    
+            .nav-link {
+                color: var(--bs-body-color);
+            }
+    
+            .navbar-brand {
+                padding-left: 30px;
+                color: var(--bs-body-color);
+            }
+    
+            .container-fluid {
+                display: flex;
+            }
+    
+            .scrollable-list-container {
+                overflow-y: auto;
+                margin: 10px;
+                max-height: calc(100vh - 150px);
+            }
+    
+            /* Custom scrollbar styling for WebKit/Blink browsers (e.g., Chrome, Safari) */
+            .scrollable-list::-webkit-scrollbar {
+                width: 12px;
+            }
+    
+            .scrollable-list::-webkit-scrollbar-thumb {
+                border-radius: 6px;
+            }
+    
+            ul {
+                list-style-type: none;
+                padding: 0;
+                cursor: pointer;
+                margin: 0;
+            }
+    
+            li {
+                margin: 0;
+            }
+    
+            .list-group-item:first-child {
+                border-radius: 0;
+            }
+    
+            .list-group-item:last-child {
+                border-radius: 0;
+            }
+    
+            .list-group-item {
+                transition: background-color 0.3s;
+                padding: 8px; /* Add padding for better aesthetics */
+            }
+    
+            .list-group-item:hover {
+                background-color: #f8f9fa; /* Change to the desired hover background color */
+            }
+    
+            .list-group-item.selected-card {
+                background-color: var(--bs-primary); 
+                color: #fff; 
+            }
+    
+            .list-container {
+                flex: 1; /* Each list-container takes up equal horizontal space */
+                margin: 10px;
+            }
+    
+            .artists-container {
+                max-width: 25%;
+            }
+    
+            .albums-container {
+                max-width: 45%;
+            }
+    
+            .tracks-container {
+                max-width: 30%;
+            }
+    
+            #album-summary {
+                flex: 1;
+                overflow-y: auto;
+                padding: 10px;
+                margin: 10px;
+            }
+    
+            .list-header {
+                padding: 5px;
+                font-weight: bold;
+                font-size: 1.7em;
+            }
+    
+            .album-card {
+                width: calc(33.3333% - 20px); /* Adjusted to fit two cards per row */
+                margin: 10px;
+                cursor: pointer;
+            }
+    
+            .album-card .card-body {
+                padding: 10px;
+            }
+    
+            .album-card .card-title {
+                font-size: 1.4em;
+            }
+    
+            .album-card.selected-card {
+                border: 4px solid var(--bs-primary);
+            }
+    
+            .card-img-top {
+                background-color: rgba(255, 255, 255, 0.4);
+            }
+    
+            .no-albums {
+                padding: 10px;
+                text-align: center;
+                font-weight: bold;
+            }
+    
+            .track-link {
+                font-size: 0.7em;
+            }
+    
+            .album-link {
+                font-size: 0.7em; /* Adjust the font size as needed */
+            }
+    
+            .manage-link {
+                width: 40%;
+            }
+    
+            .edit-link {
+                width: 28%;
+            }
+    
+            .delete-link {
+                width: 32%;
+            }
+    
+    
+            #tracks-table td, #tracks-table th {
+                color: var(--bs-body-color);
+            }
+    
+            .add-button {
+                font-size: 0.4em !important; 
+            }
+    
+            .card-subtitle {
+                font-size: 80%;
+            }
+        </style>
+    </head>
+    <body>
+        <nav class="navbar navbar-expand-lg bg-body-primary">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">Chinook Music </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item dropdown">
+                            <a id="themes-list-text" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Bootstrap
+                            </a>
+                            <ul id="themes-list" class="dropdown-menu">
+                                <!--Themes list will be generated here-->
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    
+        <div class="container-fluid">
+            <div class="list-container artists-container">
+                <h2 class="list-header d-flex align-items-center">
+                    Artists
+                    <a id="addArtistLink" href="artists/add.html" class="btn btn-outline-primary btn-sm ms-2 add-button">Add New Artist</a>
+                </h2>
+                <div class="scrollable-list-container">
+                    <ul id="artist-list" class="list-group">
+                        <!--items will be generated here-->
+                    </ul>
+                </div>
+            </div>
+    
+            <div class="list-container albums-container">
+                <h2 id="albums-header" class="list-header d-flex align-items-center">
+                    <span id="albums-header-text"></span>
+                    <a id="addAlbumLink" href="albums/add.html" class="btn btn-outline-primary btn-sm ms-2 add-button" style="display: none;">Add New Album</a>
+                </h2>
+                <div class="scrollable-list-container">
+                    <div id="album-list" class="d-flex flex-wrap justify-content-start">
+                        <!--cards or message will be generated here-->
+                    </div>
+                </div>
+            </div>
+    
+    
+            <div class="list-container tracks-container">
+                <h2 id="tracks-list-header" class="list-header"></h2>
+                <div class="scrollable-list-container">
+                    <p id="album-summary">
+                        <!-- Album summary will be dynamically added here -->
+                    </p>
+                </div>
+            </div>
+        </div>
+    
+        <!-- Bootstrap 5 Modal -->
+        <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalTitle"></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p id="modalMessage"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <!-- Bootstrap JS and Popper.js (required for Bootstrap) -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+        <script>
+            document.addEventListener("DOMContentLoaded", function(){
+                //function to fetch list of themes for themes dropdown
+                async function fetchThemes(){
+                    try {
+                        const response = await fetch(`/api/themes`);
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return await response.json();
+                    } catch (error) {
+                        console.log(error);
+                        await showModalMessage("Fetch Error", "An error occurred fetching Themes data. Check the console for details.")
+                        return [];
+                    }
+                }
+    
+                // Function to fetch tracks for a specific album from the API
+                async function fetchAlbumTracks(albumId) {
+                    try {
+                        const response = await fetch(`/api/albums/${albumId}/tracks`);
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return await response.json();
+                    } catch (error) {
+                        console.error(`Error fetching tracks for album ${albumId}:`, error);
+                        await showModalMessage("Fetch Error", "An error occurred fetching Tracks data. Check the console for details.")
+                        return [];
+                    }
+                }
+    
+                // Function to fetch artists from the API
+                async function fetchArtists() {
+                    try {
+                        const response = await fetch('/api/artists');
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return await response.json();
+                    } catch (error) {
+                        console.error('Error fetching artists:', error);
+                        await showModalMessage("Fetch Error", "An error occurred fetching Artists data. Check the console for details.")
+                        return [];
+                    }
+                }
+    
+                // Function to fetch albums for a specific artist from the API
+                async function fetchArtistAlbums(artistId) {
+                    try {
+                        const response = await fetch(`/api/artists/${artistId}/albums`);
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return await response.json();
+                    } catch (error) {
+                        console.error(`Error fetching albums for artist ${artistId}:`, error);
+                        await showModalMessage("Fetch Error", "An error occurred fetching Albums data. Check the console for details.")
+                        return [];
+                    }
+                }
+    
+                async function populateThemes() {
+                    const themesList = document.getElementById("themes-list");
+                    const themeListText = document.getElementById("themes-list-text");
+    
+    
+                    const selectedTheme = localStorage.getItem("selectedTheme")
+                    let currentTheme;
+                    if(selectedTheme){
+                        currentTheme = JSON.parse(selectedTheme).theme;
+                    }
+                    themeListText.innerText = currentTheme ?? "Bootstrap";
+    
+                    const listItem = document.createElement("a");
+                    listItem.className = `dropdown-item`;
+                    listItem.innerHTML = `${!currentTheme ? '&#10003; ' : ''}Bootstrap`;
+                    listItem.addEventListener('click', event => {
+                        localStorage.removeItem("selectedTheme")
+                        window.location.reload();
+                    })
+                    themesList.appendChild(listItem);
+    
+                    const themes = await fetchThemes();
+    
+                    themes.forEach(theme => {
+                        const listItem = document.createElement("a");
+                        listItem.id = `theme-${theme.id}`;
+                        listItem.className = `dropdown-item`;
+                        listItem.innerHTML = `${currentTheme == theme.theme ? '&#10003; ' : ''}${theme.theme}`;
+                        listItem.addEventListener('click', event => {
+                            localStorage.setItem("selectedTheme", JSON.stringify(theme))
+                            window.location.reload();
+                        })
+                        themesList.appendChild(listItem);
+                    })
+    
+                    populateArtists()
+                }
+    
+                async function populateArtists() {
+                    const artistList = document.getElementById("artist-list");
+    
+                    // Fetch artists from the API
+                    const artists = await fetchArtists();
+    
+                    artists.forEach((artist) => {
+                        const listItem = document.createElement("li");
+                        listItem.id = `artist-${artist.ArtistId}`;
+                        listItem.className = "list-group-item d-flex justify-content-between align-items-center";
+    
+                        // Artist name
+                        const artistName = document.createElement("span");
+                        artistName.textContent = artist.Name;
+                        artistName.className = "mr-2";
+                        listItem.appendChild(artistName);
+    
+                        // Create button group for Edit and Delete buttons
+                        const buttonGroup = document.createElement("div");
+                        buttonGroup.className = "btn-group";
+    
+                        // Edit button
+                        const editLink = document.createElement('a');
+                        editLink.innerHTML = '<i class="fas fa-edit"></i>';
+                        editLink.href = `artists/edit.html`;
+                        editLink.title = `Edit ${artist.Name}`;
+                        editLink.className = "btn btn-outline-warning btn-sm";
+                        editLink.style = "font-size: 0.6em; margin-left: 4px";
+                        buttonGroup.appendChild(editLink);
+    
+                        // Delete button
+                        const deleteLink = document.createElement('a');
+                        deleteLink.innerHTML = '<i class="fas fa-trash"></i>';
+                        deleteLink.href = `artists/delete.html`;
+                        deleteLink.title = `Delete ${artist.Name}`;
+                        deleteLink.className = "btn btn-outline-danger btn-sm";
+                        deleteLink.style = "font-size: 0.6em; margin-left: 4px";
+                        buttonGroup.appendChild(deleteLink);
+    
+                        // Append button group to list item
+                        listItem.appendChild(buttonGroup);
+    
+                        listItem.addEventListener("click", async () => {
+                            markSelected(artistList, listItem);
+                            handleArtistSelection(artist.ArtistId, artist.Name);
+                            await populateAlbums(artist);
+                        });
+    
+                        artistList.appendChild(listItem);
+                    });
+    
+                    // Check if there is a selected artist stored in sessionStorage
+                    const selectedArtistId = sessionStorage.getItem("selectedArtistId");
+                    const selectedArtistName = sessionStorage.getItem("selectedArtistName");
+    
+                    if (selectedArtistId && selectedArtistName) {
+                        // Retrieve the selected artist element from the list
+                        const selectedArtistElement = document.getElementById(`artist-${selectedArtistId}`);
+    
+                        // If found, trigger click event to populate albums for the selected artist
+                        if (selectedArtistElement) {
+                            selectedArtistElement.click();
+                        }
+                    }
+                }
+            
+                // Function to populate the albums list for a selected artist
+                async function populateAlbums(artist) {
+                    const albumList = document.getElementById("album-list");
+                    const albumSummary = document.getElementById("album-summary");
+                    const albumHeaderText = document.getElementById("albums-header-text");
+                    const addAlbumLink = document.getElementById("addAlbumLink");
+                    const tracksListHeader = document.getElementById("tracks-list-header");
+    
+                    // Clear previous items and album summary
+                    albumList.innerHTML = "";
+                    tracksListHeader.innerText = "";
+                    albumSummary.textContent = "";
+    
+                    // Set the header with the selected artist's name
+                    albumHeaderText.innerText = `Albums for ${artist.Name}`;
+                    addAlbumLink.style.display = 'inline-block';
+    
+                    // Fetch albums for the selected artist from the API
+                    const artistAlbums = await fetchArtistAlbums(artist.ArtistId);
+    
+                    //clear any items in albumList
+                    albumList.innerHTML = "";
+    
+                    if (artistAlbums.length > 0) {
+                        artistAlbums.forEach((album) => {
+                            const card = createAlbumCard(album, albumList, artist);
+                            albumList.appendChild(card);
+                        });
+                        const albumId = sessionStorage.getItem("selectedAlbumId");
+                        if(albumId){
+                            document.getElementById(`album-${albumId}`).click();
+                        }
+                    } else {
+                        // Display a message when no albums are found
+                        const noAlbumsMessage = document.createElement("div");
+                        noAlbumsMessage.className = "no-albums";
+                        noAlbumsMessage.textContent = `No albums found for ${artist.Name}`;
+                        albumList.appendChild(noAlbumsMessage);
+                    }
+    
+                    // Show the album list and hide the album summary by default
+                    albumList.style.display = "block";
+                    albumSummary.style.display = "none";
+    
+                    // Check if there is a selected artist stored in sessionStorage
+                    const selectedAlbumId = sessionStorage.getItem("selectedAlbumId");
+                    const selectedAlbumTitle = sessionStorage.getItem("selectedAlbumTitle");
+    
+                    if (selectedAlbumId && selectedAlbumTitle) {
+                        // Retrieve the selected artist element from the list
+                        const selectedAlbumCard = document.getElementById(`album-${selectedAlbumId}`)
+    
+                        // If found, trigger click event to populate albums for the selected artist
+                        if (selectedAlbumCard) {
+                            selectedAlbumCard.click();
+                        }
+                    }
+                }
+    
+                // Function to populate the tracks summary for a selected album
+                function populateTracks(albumTracks, albumList) {
+                    const tracksListHeader = document.getElementById("tracks-list-header");
+                    tracksListHeader.innerText = sessionStorage.getItem("selectedAlbumTitle")
+    
+                    const albumSummary = document.getElementById("album-summary");
+    
+                    // Clear existing content in the album summary
+                    albumSummary.innerHTML = "";
+    
+                    // Create a heading for the table title
+                    const tableTitle = document.createElement("h4");
+                    tableTitle.textContent = "Tracks";
+    
+                    // Add the "Add New Track" link dynamically next to the table title
+                    const addTrackLink = document.createElement("a");
+                    addTrackLink.href = "tracks/add.html";
+                    addTrackLink.className = "btn btn-outline-primary btn-sm ms-2 add-button";
+                    addTrackLink.textContent = "Add New Track";
+                    addTrackLink.addEventListener("click", function (event) {
+                        event.preventDefault();
+                        // Add your logic to handle the click event for "Add New Track" link.
+                        // For example, you can navigate to the add.html page.
+                        window.location.href = "tracks/add.html";
+                    });
+    
+                    // Append the "Add New Track" link next to the table title
+                    tableTitle.appendChild(addTrackLink);
+    
+                    // Append the table title to the album summary
+                    albumSummary.appendChild(tableTitle);
+    
+                    if(albumTracks.length > 0) {
+                        // Create a table element
+                        const table = document.createElement("table");
+                        table.id = "tracks-table";
+                        table.className = "table table-striped";
+    
+                        // Create the table header
+                        const headerRow = table.createTHead().insertRow(0);
+                        const titleHeader = document.createElement("th");
+                        const durationHeader = document.createElement("th");
+                        const editHeader = document.createElement("th");
+                        const deleteHeader = document.createElement("th");
+    
+                        titleHeader.textContent = "Title";
+                        durationHeader.textContent = "Duration";
+                        editHeader.textContent = "Edit";
+                        deleteHeader.textContent = "Delete";
+    
+                        // Set the "Title" column to take up 100% of the available horizontal space
+                        titleHeader.className = "col-8";
+    
+                        headerRow.appendChild(titleHeader);
+                        headerRow.appendChild(durationHeader);
+                        headerRow.appendChild(editHeader);
+                        headerRow.appendChild(deleteHeader);
+    
+                        // Add scope attribute to the header cells
+                        titleHeader.setAttribute("scope", "col");
+                        durationHeader.setAttribute("scope", "col");
+                        editHeader.setAttribute("scope", "col");
+                        deleteHeader.setAttribute("scope", "col");
+    
+                        // Create a table body
+                        const tableBody = table.createTBody();
+    
+                        // Populate the table with track data
+                        albumTracks.forEach((track) => {
+                            const row = tableBody.insertRow();
+                            const titleCell = row.insertCell(0);
+                            const durationCell = row.insertCell(1);
+                            const editCell = row.insertCell(2);
+                            const deleteCell = row.insertCell(3);
+    
+                            titleCell.textContent = track.Name;
+                            durationCell.textContent = formatDuration(track.Milliseconds);
+    
+                            // Add an "Edit" button to each row
+                            const editLink = document.createElement("a");
+                            editLink.className = "btn btn-outline-warning btn-sm track-link";
+                            editLink.innerHTML = '<i class="fas fa-edit"></i>';
+                            editLink.addEventListener('click', function(event){
+                                handleTrackSelection(track.TrackId, track.Name);
+                                window.location.href = "tracks/edit.html";
+                            });
+                            editCell.appendChild(editLink);
+    
+                            // Add a "Delete" button to each row
+                            const deleteLink = document.createElement("a");
+                            deleteLink.className = "btn btn-outline-danger btn-sm track-link";
+                            deleteLink.innerHTML = '<i class="fas fa-trash"></i>';
+                            deleteLink.addEventListener('click', function(event){
+                                handleTrackSelection(track.TrackId, track.Name);
+                                window.location.href = "tracks/delete.html";
+                            });
+                            deleteCell.appendChild(deleteLink);
+                        });
+    
+                        // Append the new table to the album summary
+                        albumSummary.appendChild(table);
+                    } else {
+                        const message = document.createElement('p')
+                        message.innerText = `No tracks currently available`
+                        albumSummary.appendChild(message)
+                    }
+    
+                    // Show the album summary and hide the album list
+                    albumList.style.display = "none";
+                    albumSummary.style.display = "block";
+                }
+    
+                // Function to format milliseconds into a readable duration (mm:ss)
+                function formatDuration(milliseconds) {
+                    const totalSeconds = milliseconds / 1000;
+                    const minutes = Math.floor(totalSeconds / 60);
+                    const seconds = Math.floor(totalSeconds % 60);
+                    return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+                }
+    
+                // Function to format bytes into a readable file size (MB)
+                function formatFileSize(bytes) {
+                    const megabytes = bytes / (1024 * 1024);
+                    return `${megabytes.toFixed(2)} MB`;
+                }
+    
+                // Function to mark the selected item in a list
+                function markSelected(list, selectedItem) {
+                    const items = list.getElementsByClassName("selected-card");
+                    for (let i = 0; items && i < items.length; i++) {
+                        items[i].classList.remove("selected-card");
+                    }
+                    if (selectedItem) {
+                        selectedItem.classList.add("selected-card");
+                        selectedItem.scrollIntoViewIfNeeded({ behavior: "instant" });
+                    }
+                }
+            
+                function createAlbumCard(album, albumList) {
+                    const card = document.createElement("div");
+                    card.id = `album-${album.AlbumId}`;
+                    card.className = "card album-card";
+    
+                    const cardImage = document.createElement("img");
+                    cardImage.src = (album.AlbumArt) ? `/albumart/${album.AlbumArt}` : '/albumart/_no_album_art.png';
+                    cardImage.alt = "Album Art";
+                    cardImage.className = "card-img-top";
+                    card.appendChild(cardImage);
+    
+                    const cardBody = document.createElement("div");
+                    cardBody.className = "card-body";
+    
+                    const cardTitle = document.createElement("h5");
+                    cardTitle.className = "card-title";
+                    cardTitle.textContent = album.Title;
+                    cardBody.appendChild(cardTitle);
+    
+                    // Check if ReleaseYear has a value before adding the subtitle
+                    if (album.ReleaseYear) {
+                        const releaseSubtitle = document.createElement("p");
+                        releaseSubtitle.className = "card-subtitle";
+                        releaseSubtitle.textContent = `Released: ${album.ReleaseYear}`;
+                        cardBody.appendChild(releaseSubtitle);
+                    }
+    
+                    card.appendChild(cardBody);
+    
+                    // Add a "Manage Album Art" link to each card
+                    const manageLink = document.createElement("a");
+                    manageLink.href = "albums/albumart.html"; // Set the href attribute to the albumart.html page
+                    manageLink.className = "btn btn-outline-primary btn-sm album-link manage-link";
+                    manageLink.textContent = "Manage Album Art"; // Update the button text
+    
+                    manageLink.addEventListener("click", function (event) {
+                        event.stopPropagation();
+    
+                        // Set the selected album in sessionStorage
+                        handleAlbumSelection(album.AlbumId, album.Title, album.AlbumArt);
+    
+                        // Navigate to the albumart.html page
+                        window.location.href = "albums/albumart.html";
+                    });
+    
+                    // Add an "Edit" button to each card
+                    const editLink = document.createElement("a");
+                    editLink.className = "btn btn-outline-warning btn-sm album-link edit-link";
+                    editLink.textContent = "Edit Album";
+    
+                    editLink.addEventListener("click", function (event) {
+                        event.stopPropagation();
+                        // Set the selected album in sessionStorage
+                        handleAlbumSelection(album.AlbumId, album.Title, album.AlbumArt);
+                        // Navigate to the edit.html page
+                        window.location.href = 'albums/edit.html';
+                    });
+    
+                    // Add a "Delete" button to each card
+                    const deleteLink = document.createElement("a");
+                    deleteLink.className = "btn btn-outline-danger btn-sm album-link delete-link";
+                    deleteLink.textContent = "Delete Album";
+    
+                    deleteLink.addEventListener("click", function (event) {
+                        event.stopPropagation();
+                        // Set the selected album in sessionStorage
+                        handleAlbumSelection(album.AlbumId, album.Title, album.AlbumArt);
+                        // Navigate to the edit.html page
+                        window.location.href = 'albums/delete.html';
+                    });
+    
+                    // Create a container div for both buttons and append them
+                    const buttonsContainer = document.createElement("div");
+                    buttonsContainer.className = "d-flex justify-content-between"; // Adjusted to evenly distribute space
+                    buttonsContainer.appendChild(editLink);
+                    buttonsContainer.appendChild(deleteLink);
+                    buttonsContainer.appendChild(manageLink);
+                    card.appendChild(buttonsContainer);
+    
+                    // Add a click event listener to each card to show tracks
+                    card.addEventListener("click", async function () {
+                        //add values to session storage
+                        handleAlbumSelection(album.AlbumId, album.Title, album.AlbumArt);
+    
+                        // Mark the selected card
+                        markSelected(albumList, card);
+    
+                        // Fetch and display tracks for the selected album
+                        const albumTracks = await fetchAlbumTracks(album.AlbumId);
+                        populateTracks(albumTracks, albumList);
+                    });
+                    return card;
+                }
+    
+                function handleAlbumSelection(albumId, albumTitle, albumArt){
+                    sessionStorage.setItem("selectedAlbumId", albumId);
+                    sessionStorage.setItem("selectedAlbumTitle", albumTitle);
+                    if(albumArt){
+                        sessionStorage.setItem("selectedAlbumArt", albumArt);
+                    } else {
+                        sessionStorage.removeItem("selectedAlbumArt");
+                    }
+                }
+    
+                function handleArtistSelection(artistId, artistName){
+                    //sessionStorage.clear();
+                    sessionStorage.setItem("selectedArtistId", artistId);
+                    sessionStorage.setItem("selectedArtistName", artistName);
+                }
+    
+                function handleTrackSelection(trackId, trackName){
+                    sessionStorage.setItem("selectedTrackId", trackId);
+                    sessionStorage.setItem("selectedTrackName", trackName);
+                }
+                
+                function showModalMessage(title, message) {
+                    const modal = new bootstrap.Modal(document.getElementById('myModal'));
+                    document.getElementById('modalTitle').innerText = title;
+                    document.getElementById('modalMessage').innerText = message;
+                    modal.show();
+    
+                    // Wrap the modal closing in a promise
+                    return new Promise(resolve => {
+                        modal._element.addEventListener('hidden.bs.modal', function () {
+                            resolve();
+                        });
+                    });
+                }
+            
+                window.addEventListener('pageshow', function (event) {
+                    const artistId = sessionStorage.getItem("selectedArtistId")
+                    if (artistId) {
+                        setTimeout(() => {
+                            populateAlbums({
+                                ArtistId: artistId,
+                                Name: sessionStorage.getItem("selectedArtistName")
+                            })
+                        }, 100)
+                    }
+                });
+    
+                // Call the initial function to populate the artists list
+                populateThemes();
+            })       
+        </script>    
+    
+    </body>
+</html>

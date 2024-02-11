@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Edit Artist</title>
+        <script src="/scripts/loadtheme.js"></script>
+        <style>
+            body {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                margin: 0;
+            }
+
+            .container {
+                width: 40%; /* Adjust the width of the container as needed */
+            }
+
+            h1 {
+                text-align: center;
+                margin-bottom: 30px;
+            }
+
+            #artist-form {
+                margin-bottom: 20px;
+            }
+        </style>
+
+    </head>
+
+    <body>
+        <div class="container">
+            <h1>Edit Artist</h1>
+
+            <!-- Form for editing an existing artist -->
+            <form id="artist-form">
+                <div class="mb-3">
+                    <label for="artist-name" class="form-label">Name:</label>
+                    <input type="text" id="artist-name" name="artistName" class="form-control">
+                </div>
+            
+                <!-- Use the btn class for both buttons -->
+                <button type="submit" id="submit-button" class="btn btn-primary">Update Artist</button>
+                
+                <!-- Use an anchor tag for the Cancel button with the btn class -->
+                <a href="/" id="cancel-button" class="btn btn-secondary">Cancel</a>
+            </form>
+
+            <!-- Bootstrap 5 Modal -->
+            <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalTitle"></h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p id="modalMessage"></p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                document.addEventListener("DOMContentLoaded", function () {
+                    const artistForm = document.getElementById("artist-form");
+
+                    // Get artist ID from session storage
+                    const artistId = sessionStorage.getItem("selectedArtistId");
+
+                    // Fetch artist data for editing
+                    fetch(`/api/artists/${artistId}`)
+                        .then(response => response.json())
+                        .then(artistData => {
+                            // Populate the form with existing artist data
+                            document.getElementById("artist-name").value = artistData.Name;
+                        })
+                        .catch(error => {
+                            console.error(error);
+                            showModalMessage("Error", "Failed to fetch artist data. Please check the console for details.");
+                        });
+
+                    artistForm.addEventListener("submit", function (event) {
+                        event.preventDefault();
+                        const updatedArtistName = document.getElementById("artist-name").value;
+
+                        // Send the updated artist data to the backend API
+                        fetch(`/api/artists/${artistId}`, {
+                            method: "PATCH",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                                ...(updatedArtistName && { Name: updatedArtistName })
+                            })
+                        })
+                        .then(async response => {
+                            switch(response.status){
+                                case 200: {
+                                    await showModalMessage("Success", `Artist successfully updated`);
+                                    window.location.href = "/";
+                                    break;
+                                }
+                                case 404: {
+                                    await showModalMessage("Error - 404", "Unable to update artist - Not Found");
+                                    break;
+                                }
+                                case 422: {
+                                    //handle validation errors from server
+                                    response.json()
+                                        .then(async json => {
+                                            let message = '';
+                                            json.forEach(validationError => {
+                                                message += `<li>${validationError.message}</li>`
+                                            });
+                                            message = `<ul>${message}</ul>`
+                                            await showModalMessage("Validation Errors", message);
+                                        })
+                                    break;
+                                }
+                                default: {
+                                    await showModalMessage("Error", "Failed to update artist. Please check the console for details.");
+                                }
+                            }
+                        })
+                        .catch(async error => {
+                            console.log(error)
+                            await showModalMessage("Error", "Failed to update artist. Please check the console for details.");
+                        });
+                    });
+                });
+
+                function showModalMessage(title, message) {
+                    const modal = new bootstrap.Modal(document.getElementById('myModal'));
+                    document.getElementById('modalTitle').innerText = title;
+                    document.getElementById('modalMessage').innerHTML = message;
+                    modal.show();
+
+                    // Wrap the modal closing in a promise
+                    return new Promise(resolve => {
+                        modal._element.addEventListener('hidden.bs.modal', function () {
+                            resolve();
+                        });
+                    });
+                }
+            </script>
+
+        </div>
+
+        <!-- Bootstrap JS and Popper.js (required for Bootstrap) -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    </body>
+</html>

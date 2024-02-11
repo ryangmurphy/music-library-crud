@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Delete Artist</title>
+        <script src="/scripts/loadtheme.js"></script>
+        <style>
+            body {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                margin: 0;
+            }
+
+            .container {
+                text-align: center;
+            }
+
+            h1 {
+                margin-bottom: 30px;
+            }
+
+            #confirm-delete-button,
+            #cancel-button {
+                margin-right: 10px;
+            }
+
+            #artist-name {
+                margin-bottom: 20px;
+            }
+
+        </style>
+
+    </head>
+
+    <body>
+        <div class="container">
+            <h1>Confirm Delete</h1>
+
+            <p>Are you sure you want to delete the following artist?</p>
+            <h3 id="artist-name"></h3>
+            <p>Note: All corresponding albums and tracks will also be deleted.</p>
+
+            <div>
+                <button type="button" id="confirm-delete-button" class="btn btn-danger">Confirm Delete</button>
+                <a href="/" id="cancel-button" class="btn btn-secondary">Cancel</a>
+            </div>
+
+            <!-- Bootstrap 5 Modal -->
+            <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalTitle"></h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p id="modalMessage"></p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                document.addEventListener("DOMContentLoaded", function () {
+                    const confirmDeleteButton = document.getElementById("confirm-delete-button");
+
+                    // Get artist ID from sessionStorage
+                    const artistId = sessionStorage.getItem("selectedArtistId");
+                    // Retrieve artist name from sessionStorage
+                    const artistName = sessionStorage.getItem("selectedArtistName");
+
+                    // Update the content with the artist name
+                    document.getElementById("artist-name").innerText = artistName;
+
+                    confirmDeleteButton.addEventListener("click", function () {
+                        // Send the delete request to the backend API
+                        fetch(`/api/artists/${artistId}`, {
+                            method: "DELETE",
+                        })
+                        .then(async response => {
+                            if (response.ok) {
+                                sessionStorage.clear()
+                                await showModalMessage("Success", `Artist ${artistName} deleted successfully.`);
+                                // Redirect to the main page after deletion or cancellation
+                                window.location.href = "/";
+                            } else {
+                                switch(response.status){
+                                    case 404: {
+                                        if(response.body.changed)
+                                        await showModalMessage("Error - 404", "Unable to delete artist - Not Found");
+                                        break;
+                                    }
+                                    default: {
+                                        console.log(response)
+                                        await showModalMessage("Error", "An error occurred. Please check the console for details.")
+                                    }
+                                }
+                            }
+                        })
+                        .catch(async error => {
+                            console.log(error);
+                            await showModalMessage("Error", "Failed to delete artist. Please check the console for details.");
+                        });
+                    });
+                });
+
+                function showModalMessage(title, message) {
+                    const modal = new bootstrap.Modal(document.getElementById('myModal'));
+                    document.getElementById('modalTitle').innerHTML = title;
+                    document.getElementById('modalMessage').innerHTML = message;
+                    modal.show();
+
+                    // Wrap the modal closing in a promise
+                    return new Promise(resolve => {
+                        modal._element.addEventListener('hidden.bs.modal', function () {
+                            resolve();
+                        });
+                    });
+                }
+            </script>
+
+        </div>
+
+        <!-- Bootstrap JS and Popper.js (required for Bootstrap) -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    </body>
+
+</html>
