@@ -1,7 +1,7 @@
 
 # Music Database Database - School Project
 
-This project showcases a collaborative effort completed during my coursework at NSCC, where I had the opportunity to delve into backend development. Under the guidance of my instructor, who built the front-end and I took on the challenge of developing the backend. This endeavor resulted in a sophisticated Node.js and Express application designed to operate as a REST API for a comprehensive music database.
+This project showcases a collaborative effort completed during my coursework at NSCC, where I had the opportunity to delve into backend development. Under the guidance of my instructor, who built the front-end and I took on the challenge of developing the back-end. This endeavor resulted in a sophisticated Node.js and Express application designed to operate as a REST API for a comprehensive music database.
 
 Leveraging the efficiency of SQLite through the better-sqlite3 library, our application offers a seamless data storage solution. It features designated endpoints that allow for access to a wide array of musical data, including artists, albums, tracks, media types, and themes.
 
@@ -59,6 +59,6 @@ This will start the server on port 3000. If you wish to use a different port, yo
 
 
 ## Screenshots
+![music database](https://github.com/ryangmurphy/music-library-crud/assets/137011288/fe6ad47f-2c06-43b1-adf0-abafd92b605c)
 
-![App Screenshot](https://via.placeholder.com/468x300?text=App+Screenshot+Here)
 
