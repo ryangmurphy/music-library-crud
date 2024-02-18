@@ -10,7 +10,7 @@ This project not only enhanced my technical skills in backend development but al
 
 ## Tech Stack
 
-JavaScript, Node.js, Express.js, SQLite, Rest APIs
+JavaScript, HTML, Node.js, Express.js, SQLite, Rest APIs
 
 
 ## Features
